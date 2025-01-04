@@ -17,10 +17,10 @@
 
 
     //아래 임시
-    state.gameConfig = {
-        nums: 111,
-        answer: 3
-    };
+    // state.gameConfig = {
+    //     nums: 111,
+    //     answer: 3
+    // };
   }
 
   onMounted(() => {
