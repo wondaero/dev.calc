@@ -45,7 +45,7 @@
   )
   
   const initConfig = () => {
-    state.numLen= 3;
+    state.numLen = 3;
     state.digitLen = 1;
     state.randomNumLen = false;
     state.randomDigitLen = false;
@@ -153,11 +153,14 @@
             justify-content: center;
             background: #ddd;
             box-shadow: inset 0 0 10px #000;
+            opacity: .2;
+            cursor: pointer;
           }
 
           input:checked + strong{
             background: #fff;
             box-shadow: 0 0 8px #fff;
+            opacity: 1;
           }
         }
 
@@ -191,11 +194,18 @@
         cursor: pointer; /* thumb를 클릭 가능한 상태로 설정 */
         position: relative;
         top: -6px;
-        box-shadow: 0 0 8px rgba(255, 255, 255, .8);
+        box-shadow: 0 0 8px rgba(255, 255, 255, .8), inset 0 0 8px rgba(0, 0, 0, .2);
       }
 
         &[disabled]{
-          opacity: .2;
+            &::-webkit-slider-runnable-track{
+              background: #888;
+            }
+
+            &::-webkit-slider-thumb{
+              background: #888;
+              box-shadow: inset 0 0 8px #999;
+            }
         }
       }
 
