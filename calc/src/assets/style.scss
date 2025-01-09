@@ -31,6 +31,7 @@
 
 html, body{
     background: darkslateblue;
+    background: linear-gradient(to top, transparent, darkslateblue, transparent), linear-gradient(135deg, rgb(72, 61, 139) 50%, rgba(72, 61, 139, .8) 0) 0/20px 20px;
     color: #fff;
     font-family: Pretendard;
     min-width: 280px;
