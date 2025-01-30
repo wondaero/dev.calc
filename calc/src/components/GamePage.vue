@@ -15,7 +15,11 @@
     numGroup: [],
     tmpCard: undefined,
     isAutoCalc: false,
-    myAnswer: ''
+    myAnswer: '',
+    reCalcCnt: 0,
+    classList: {
+      answer: 'wrong'
+    }
   });
 
   const getRandomNum = (mn, mx) => Math.floor(Math.random() * (mx - mn + 1)) + mn;
@@ -36,6 +40,8 @@
   console.log(props.gameConfig);
 
   const calcMyExpression = (isSubmit) => {
+    if(!state.isAutoCalc && !isSubmit) return;
+
     if(isSubmit){
       if(state.nums.filter(n => n !== null).length){
           alert('모든 숫자를 사용해주세요.');
@@ -102,19 +108,47 @@
     { immediate: true } // 컴포넌트가 처음 로딩될 때도 watch가 동작하도록 설정
   );
 
-  const setGroup = () => {
-      state.numGroupArr = [];
+  const shuffleArr = (arr) => {
+    //Fisher-Yates Shuffle
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); // 0부터 i까지 랜덤한 인덱스
+      [arr[i], arr[j]] = [arr[j], arr[i]];  // swap
+    }
+    return arr;
+  }
 
-      let tmpArr = JSON.parse(JSON.stringify(state.nums));
+
+  const setGroup = () => {
+      let tmpArr = shuffleArr(JSON.parse(JSON.stringify(state.nums))).map(a => +a.char);
 
       while(tmpArr.length){
-          // const cutLen = getRandomNum(1, props.gameConfig.randomDigitLen ? 10 : props.gameConfig.digitLen);
-          const cutLen = getRandomNum(1, props.gameConfig.digitLen);
-          state.numGroup.push(+tmpArr.slice(0, cutLen).map(n => n.char));
-          tmpArr = tmpArr.slice(cutLen);
+        // const cutLen = getRandomNum(1, props.gameConfig.randomDigitLen ? 10 : props.gameConfig.digitLen);
+        const cutLen = getRandomNum(1, props.gameConfig.digitLen);
+        state.numGroup.push(+(tmpArr.slice(0, cutLen).join('')));
+        tmpArr = tmpArr.slice(cutLen);
       }
 
       console.log(state.numGroup);
+  }
+
+  const randomOprCalc = () => {
+    state.answer = state.numGroup.reduce((accumulator, currentValue) => {
+      const rdmOpr = oprs[getRandomNum(0, oprs.length - 1)];
+      // return accumulator + currentValue;
+
+      if(rdmOpr === '+') return +accumulator + +currentValue;
+      else if(rdmOpr === '-') return +accumulator - +currentValue;
+      else if(rdmOpr === '*') return +accumulator * +currentValue;
+      else if(rdmOpr === '/') return +accumulator / +currentValue;
+
+    });
+
+    if(String(state.answer).indexOf('.') > -1){
+      console.warn('재연산!!!');
+
+      state.reCalcCnt++;
+      return randomOprCalc();
+    }
   }
 
   //create
@@ -133,6 +167,7 @@
     }
     state.oprs = props.gameConfig.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
     setGroup();
+    randomOprCalc();
   }
 
   const pickOprCard = (obj) => {
@@ -156,6 +191,7 @@
       }
 
       state.tmpCard = undefined;
+      calcMyExpression();
     }
   }
 
@@ -176,6 +212,7 @@
         state.tmpCard = undefined;
       }
     }
+    calcMyExpression();
   }
 
   const restoreCard = (obj, idx) => {
@@ -221,29 +258,42 @@
     }
   }
 
+  const cancelSelect = (e) => {
+    if(e.target.nodeName === 'LI') return;
+    state.tmpCard = undefined;
+
+  }
+
 </script>
 
 <template>
-  <div class="wrapper">
-    <aside id="recalCnt" class="recal-cnt">0</aside>
+  <div class="wrapper" @click="cancelSelect($event)">
+    <aside class="recal-cnt">{{ state.reCalcCnt }}</aside>
     <main>
-        <h2 id="finalValue">{{ state.answer }}</h2>
+      <div>
+        <h2>{{ state.answer }}</h2>
         <p>
-            아래 주어진 숫자카드와 연산자카드를 조합해서<br>
+            아래 주어진 숫자카드와<br>
+            연산자카드를 조합해서<br>
             위의 숫자를 만들어주세요.
-            <strong>*모든 숫자를 사용할 것<br>*숫자가 10을 넘을 수 있음</strong>
+            <strong>
+              *모든 숫자를 사용할 것<br>
+              *숫자가 10을 넘을 수 있음
+            </strong>
         </p>
-        <ul id="calcBoard" class="calc-board">
+        <ul id="calcBoard" class="picked-cards">
           <li v-for="(itm, idx) in state.pickedCards" :key="idx"
           :class="{blank: state.tmpCard && idx === state.tmpCard.idx}"
           @click="restoreCard(itm, idx)">{{ itm.char }}</li>
         </ul>
         <h2 id="myValue" class="my-value"></h2>
+      </div>
     </main>
     <footer>
+      <div>
         <fieldset class="my-answer">
             <legend><label><input type="checkbox" v-model="state.isAutoCalc" /><strong><span>자동계산</span><b></b></strong></label></legend>
-            <h2>{{ state.myAnswer }}</h2>
+            <h2 :class="!state.nums.filter(n => n !== null).length && state.myAnswer === state.answer ? 'correct' : 'wrong'">{{ state.myAnswer }}</h2>
         </fieldset>
         <fieldset>
             <legend>연산자</legend>
@@ -261,8 +311,9 @@
         </fieldset>
         <div class="btns">
             <button id="init">초기화</button>
-            <button id="submit">제출</button>
+            <button @click="calcMyExpression(true)">제출</button>
         </div>
+      </div>
     </footer>
   </div>
 </template>
@@ -270,18 +321,59 @@
 <style scoped lang="scss">
   .wrapper{
     position: fixed;
-    bottom: 10px;
-    left: 10px;
-    right: 10px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    
+    aside{
+      position: fixed;
+      top: 0;
+      left: 0;
+      color: rgba(0, 0, 0, .2);
+      font-size: 30px;
+      vertical-align: top;
+    }
+    main{
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      justify-content: center;
+
+      & > div{
+        width: 100%;
+        max-width: 562px;
+      }
+
+      h2{
+        font-size: 32px;
+      }
+      
+      p{
+        text-align: center;
+        
+        strong{
+          font-size: 12px;
+          display: block;
+          color: orange;
+        }
+      }
+    }
   }
 
   fieldset{
       border-radius: 5px;
-      margin-top: 10px;
-      border: 1px solid #fff;
+      margin-top: 5px;
+      padding: 0;
+      border: 1px solid #bbb;
+      text-align: left;
   }
   fieldset legend{
       padding: 0 5px;
+      margin-left: 10px;
   }
 
   .my-answer{
@@ -317,7 +409,6 @@
             margin-left: 5px;
             position: relative;
             overflow: hidden;
-            box-shadow: inset 0 0 2px rgba(0, 0, 0, .8);
 
             &:before{
               content: '';
@@ -341,13 +432,25 @@
               position: absolute;
               top: 4px;
               left: 4px;
+              transform: translateX(0);
               transition: transform .5s;
               box-shadow: 0 0 4px rgba(0, 0, 0, .4);
             }
-            
           }
-
         }
+      }
+    }
+    h2{
+      margin: 0;
+      text-align: center;
+      height: 32px;
+
+      &.wrong{
+        color: #f00;
+        opacity: .5;
+      }
+      &.correct{
+        color: #0f0;
       }
     }
   }
@@ -358,8 +461,8 @@
     margin: 0;
     padding: 0;
     flex-wrap: wrap;
-    padding-top: 10px;
-    padding-left: 10px;
+    padding-top: 5px;
+    padding-left: 5px;
 
     li{
       width: 50px;
@@ -371,22 +474,34 @@
       border: 1px solid #eee;
       box-shadow: 0 1px 5px rgba(0, 0, 0, .2);
       font-size: 32px;
-      margin-right: 10px;
-      margin-bottom: 10px;
+      margin-right: 5px;
+      margin-bottom: 5px;
       cursor: pointer;
       background: #fff;
       color: #000;
+      box-sizing: border-box;
 
       &.blank{
         background: 0;
-        border: 1px dashed #fff;
+        border: 1px dashed #ccc;
       }
     }
 
-    &.calc-board{
-      li.blank{
-        color: rgba(255, 255, 255, 1);
-        opacity: .5;
+    &.picked-cards{
+      // display: block;
+      // white-space: nowrap;
+      // overflow-x: auto;
+
+      li{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        vertical-align: top;
+
+        &.blank{
+          color: rgba(255, 255, 255, 1);
+          opacity: .5;
+        }
       }
     }
 
@@ -413,6 +528,52 @@
       margin-right: 5px;
       background: #fff;
       color: deeppink;
+      border: 1px solid deeppink;
+    }
+  }
+  
+  footer{
+    background: #fff;
+    padding: 5px;
+    box-shadow: 0 0px 12px rgba(255, 255, 255, .9);
+    color: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    & > div{
+      height: 100%;
+      width: 100%;
+      max-width: 562px;
+    }
+  }
+
+  @media (max-width: 360px){
+    ul{
+      li{
+        width: 42px;
+        height: 42px;
+      }
+
+      &.picked-cards{
+        li{
+          width: 30px;
+          height: 30px;
+          font-size: 16px; 
+        }
+      }
+    }
+  }
+
+  @media (max-height: 360px){
+    .wrapper{
+      flex-direction: row;
+    }
+
+    footer{
+      position: relative;
+      width: 287px;
+      overflow-y: auto;
     }
   }
 </style>
