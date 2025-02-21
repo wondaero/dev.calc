@@ -30,14 +30,17 @@
   const a2z = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
   const opr2symbol = {
-    '+': '➕',
-    '-': '➖',
-    '*': '✖️',
-    '/': '➗'
+    // '+': '➕',
+    // '-': '➖',
+    // '*': '✖️',
+    // '/': '➗'
+    '+': 'p',
+    '-': 'm',
+    '*': 'm2',
+    '/': 'd'
   }
 
-
-  console.log(props.gameConfig);
+  // console.log(props.gameConfig);
 
   const calcMyExpression = (isSubmit) => {
     if(!state.isAutoCalc && !isSubmit) return;
@@ -127,21 +130,32 @@
         state.numGroup.push(+(tmpArr.slice(0, cutLen).join('')));
         tmpArr = tmpArr.slice(cutLen);
       }
-
-      console.log(state.numGroup);
   }
 
   const randomOprCalc = () => {
-    state.answer = state.numGroup.reduce((accumulator, currentValue) => {
+    let strExpr = '';
+
+    state.numGroup.forEach((ng) => {
       const rdmOpr = oprs[getRandomNum(0, oprs.length - 1)];
-      // return accumulator + currentValue;
+      strExpr += ng + rdmOpr;
+    })
 
-      if(rdmOpr === '+') return +accumulator + +currentValue;
-      else if(rdmOpr === '-') return +accumulator - +currentValue;
-      else if(rdmOpr === '*') return +accumulator * +currentValue;
-      else if(rdmOpr === '/') return +accumulator / +currentValue;
+    // console.log(strExpr.slice(0, -1));  //정답
 
-    });
+    state.answer = new Function('return ' + strExpr.slice(0, -1))();
+
+    // state.answer = state.numGroup.reduce((accumulator, currentValue) => {
+    //   const rdmOpr = oprs[getRandomNum(0, oprs.length - 1)];
+
+    //   console.log(accumulator, rdmOpr, currentValue);
+    //   // return accumulator + currentValue;
+
+    //   if(rdmOpr === '+') return +accumulator + +currentValue;
+    //   else if(rdmOpr === '-') return +accumulator - +currentValue;
+    //   else if(rdmOpr === '*') return +accumulator * +currentValue;
+    //   else if(rdmOpr === '/') return +accumulator / +currentValue;
+
+    // });
 
     if(String(state.answer).indexOf('.') > -1){
       console.warn('재연산!!!');
@@ -225,7 +239,6 @@
         };
       }else{
         if(idx === state.tmpCard.idx){
-          console.log('지운다')
           state.pickedCards = state.pickedCards.filter((c, idx) => idx !== state.tmpCard.idx);
           state.nums[state.tmpCard.card.idx] = state.tmpCard.card;
           state.tmpCard = undefined;
@@ -264,6 +277,15 @@
 
   }
 
+  const initBoard = () => {
+    if(!window.confirm('모든 카드들을 초기화 하시겠습니까?')) return;
+    state.pickedCards.forEach((pc) => {
+      if(pc.type === 'num') state.nums[pc.idx] = pc;
+    })
+
+    state.pickedCards = [];
+  }
+
 </script>
 
 <template>
@@ -283,8 +305,15 @@
         </p>
         <ul id="calcBoard" class="picked-cards">
           <li v-for="(itm, idx) in state.pickedCards" :key="idx"
-          :class="{blank: state.tmpCard && idx === state.tmpCard.idx}"
-          @click="restoreCard(itm, idx)">{{ itm.char }}</li>
+          :class="{
+            blank: state.tmpCard && idx === state.tmpCard.idx,
+            [itm.char] : itm.type === 'opr'
+          }"
+          @click="restoreCard(itm, idx)">
+          {{ itm.type === 'num' ? itm.char : '' }}
+          <span v-if="itm.type === 'opr'"></span>
+          <span v-if="itm.type === 'opr'"></span>
+          </li>
         </ul>
         <h2 id="myValue" class="my-value"></h2>
       </div>
@@ -298,8 +327,9 @@
         <fieldset>
             <legend>연산자</legend>
             <ul id="oprList" class="opr-list">
-              <li v-for="(opr, idx) in state.oprs" :key="idx" @click="pickOprCard(opr)">
-                {{ opr.char }}
+              <li v-for="(opr, idx) in state.oprs" :key="idx" :class="opr.char" @click="pickOprCard(opr)">
+                <span></span>
+                <span></span>
               </li>
             </ul>
         </fieldset>
@@ -310,7 +340,7 @@
             </ul>
         </fieldset>
         <div class="btns">
-            <button id="init">초기화</button>
+            <button @click="initBoard">초기화</button>
             <button @click="calcMyExpression(true)">제출</button>
         </div>
       </div>
@@ -480,10 +510,60 @@
       background: #fff;
       color: #000;
       box-sizing: border-box;
+      position: relative;
 
       &.blank{
         background: 0;
         border: 1px dashed #ccc;
+      }
+
+      span{
+        pointer-events: none;
+      }
+
+
+      &.p span,
+      &.m span:first-of-type,
+      &.m2 span,
+      &.d span:first-of-type{
+        width: 28px;
+        height: 8px;
+        background: #000;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      &.p span:last-of-type{
+        transform: translate(-50%, -50%) rotate(90deg);
+      }
+      &.m2 span:first-of-type{
+        transform: translate(-50%, -50%) rotate(45deg);
+      }
+      &.m2 span:last-of-type{
+        transform: translate(-50%, -50%) rotate(-45deg);
+      }
+      &.d span:last-of-type{
+        position: relative;
+        width: 28px;
+        height: 36px;
+      }
+      &.d span:last-of-type:before,
+      &.d span:last-of-type:after{
+        content: '';
+        display: block;
+        width: 10px;
+        height: 10px;
+        background: #000;
+        position: absolute;
+        top: 2px;
+        left: 50%;
+        border-radius: 50%;
+        transform: translateX(-50%);
+      }
+      &.d span:last-of-type:after{
+        top: unset;
+        bottom: 2px;
       }
     }
 
@@ -501,6 +581,13 @@
         &.blank{
           color: rgba(255, 255, 255, 1);
           opacity: .5;
+
+          &.p span,
+          &.m span,
+          &.m2 span,
+          &.d span:first-of-type,
+          &.d span:after,
+          &.d span:before{background: #fff;}
         }
       }
     }
@@ -510,6 +597,13 @@
   .opr-list{
     justify-content: center;
   }
+  .opr-list li{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
 
   .btns{
     margin-top: 10px;
@@ -553,13 +647,33 @@
       li{
         width: 42px;
         height: 42px;
+
+
+        
       }
 
       &.picked-cards{
         li{
           width: 30px;
           height: 30px;
-          font-size: 16px; 
+          font-size: 16px;
+
+          &.p span,
+          &.m span:first-of-type,
+          &.m2 span,
+          &.d span:first-of-type{
+            width: 20px;
+            height: 2px;
+          }
+          &.d span:last-of-type{
+            height: 22px;
+          }
+          &.d span:last-of-type:before,
+          &.d span:last-of-type:after{
+            width: 4px;
+            height: 4px;
+          }
+
         }
       }
     }
