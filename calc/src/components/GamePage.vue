@@ -1,5 +1,6 @@
 <script setup>
-  import { reactive, watch } from 'vue';
+  import { reactive, watch, defineEmits } from 'vue';
+  
   const props = defineProps({
     gameConfig: {
       type: Object,
@@ -22,6 +23,8 @@
     }
   });
 
+  const emit = defineEmits(['goBackHome']);
+
   const getRandomNum = (mn, mx) => Math.floor(Math.random() * (mx - mn + 1)) + mn;
   const rdmArr = (arr) => arr[getRandomNum(0, arr.length - 1)]; 
   // const nums = '1234567890';  
@@ -30,18 +33,16 @@
   const a2z = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
   const opr2symbol = {
-    // '+': '➕',
-    // '-': '➖',
-    // '*': '✖️',
-    // '/': '➗'
     '+': 'p',
     '-': 'm',
     '*': 'm2',
     '/': 'd'
   }
 
-  // console.log(props.gameConfig);
+  console.log(props.gameConfig);
 
+
+  
   const calcMyExpression = (isSubmit) => {
     if(!state.isAutoCalc && !isSubmit) return;
 
@@ -80,8 +81,21 @@
     const strExpr = state.pickedCards.map(c => c.type === 'num' ? c.char : c.opr).join('');
     try{
       const result = new Function('return ' + strExpr)();  // new Function을 사용하여 문자열 계산
-      // console.log(result);  // 결과: -3
       state.myAnswer = result;
+
+      if(!isSubmit) return;
+
+      if(state.myAnswer === state.answer){
+        if(window.confirm('정답입니다. \n다른문제를 낼까요?')){
+          create();
+        }
+        
+      }else{
+        alert('땡! 틀렸습니다.');
+      }
+        
+
+
     }catch(err){
       if(!isSubmit) return;
       alert('식을 확인해주세요.');
@@ -122,40 +136,32 @@
 
 
   const setGroup = () => {
-      let tmpArr = shuffleArr(JSON.parse(JSON.stringify(state.nums))).map(a => +a.char);
+    let tmpArr = shuffleArr(JSON.parse(JSON.stringify(state.nums))).map(a => +a.char);
 
-      while(tmpArr.length){
-        // const cutLen = getRandomNum(1, props.gameConfig.randomDigitLen ? 10 : props.gameConfig.digitLen);
-        const cutLen = getRandomNum(1, props.gameConfig.digitLen);
-        state.numGroup.push(+(tmpArr.slice(0, cutLen).join('')));
-        tmpArr = tmpArr.slice(cutLen);
-      }
+    state.numGroup = [];
+
+    while(tmpArr.length){
+      // const cutLen = getRandomNum(1, props.gameConfig.randomDigitLen ? 10 : props.gameConfig.digitLen);
+      let cutLen = getRandomNum(1, props.gameConfig.digitLen);
+      if(props.gameConfig.digitLen === '0') cutLen = getRandomNum(1, state.nums.length - 2);
+
+      state.numGroup.push(+(tmpArr.slice(0, cutLen).join('')));
+      tmpArr = tmpArr.slice(cutLen);
+    }
   }
 
   const randomOprCalc = () => {
     let strExpr = '';
+
 
     state.numGroup.forEach((ng) => {
       const rdmOpr = oprs[getRandomNum(0, oprs.length - 1)];
       strExpr += ng + rdmOpr;
     })
 
-    // console.log(strExpr.slice(0, -1));  //정답
+    console.log(strExpr.slice(0, -1));  //정답
 
     state.answer = new Function('return ' + strExpr.slice(0, -1))();
-
-    // state.answer = state.numGroup.reduce((accumulator, currentValue) => {
-    //   const rdmOpr = oprs[getRandomNum(0, oprs.length - 1)];
-
-    //   console.log(accumulator, rdmOpr, currentValue);
-    //   // return accumulator + currentValue;
-
-    //   if(rdmOpr === '+') return +accumulator + +currentValue;
-    //   else if(rdmOpr === '-') return +accumulator - +currentValue;
-    //   else if(rdmOpr === '*') return +accumulator * +currentValue;
-    //   else if(rdmOpr === '/') return +accumulator / +currentValue;
-
-    // });
 
     if(String(state.answer).indexOf('.') > -1){
       console.warn('재연산!!!');
@@ -166,23 +172,43 @@
   }
 
   //create
-  if(props.gameConfig && props.gameConfig.nums !== undefined && props.gameConfig.answer !== undefined){
-    state.nums = String(props.gameConfig.nums).split('').map((n, idx) => ({idx: idx, num: n}));
-    console.log(state);
-    state.answer = props.gameConfig.answer;
-  }else{
+  const create = () => {
+    if(props.gameConfig && props.gameConfig.nums !== undefined && props.gameConfig.answer !== undefined){
+      console.log('url타고 들어옴')
+      state.nums = String(props.gameConfig.nums).split('').map((n, idx) => ({idx: idx, num: n}));
+      console.log(state);
+      state.answer = props.gameConfig.answer;
+    }else{
+      console.log('앞에서 옴')
+      state.pickedCards = [];
+      state.nums = [];
+      state.myAnswer = '';
 
-    for(let i = 0; i < props.gameConfig.numLen; i++){
-      state.nums.push({
-        char: rdmArr(nums),
-        idx: i,
-        type: 'num'
-      });
+
+      let numCnt = props.gameConfig.numLen;
+      if(numCnt === '0'){
+        if(props.gameConfig.digitLen === '0'){
+          numCnt = getRandomNum(3, 10);
+        }else{
+          numCnt = getRandomNum(props.gameConfig.digitLen + 2, 10);
+        }
+      }
+
+      for(let i = 0; i < numCnt; i++){
+        state.nums.push({
+          char: rdmArr(nums),
+          idx: i,
+          type: 'num'
+        });
+      }
+
+      state.oprs = props.gameConfig.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
+      setGroup();
+      randomOprCalc();
     }
-    state.oprs = props.gameConfig.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
-    setGroup();
-    randomOprCalc();
   }
+
+  create();
 
   const pickOprCard = (obj) => {
     if(!obj) return;
@@ -278,7 +304,7 @@
   }
 
   const initBoard = () => {
-    if(!window.confirm('모든 카드들을 초기화 하시겠습니까?')) return;
+    if(!window.confirm('모든 카드들을 초기화할까요?')) return;
     state.pickedCards.forEach((pc) => {
       if(pc.type === 'num') state.nums[pc.idx] = pc;
     })
@@ -286,6 +312,16 @@
     state.pickedCards = [];
   }
 
+  const goHome = () => {
+    if(!window.confirm('초기화면으로 돌아갈까요?')) return;
+    emit('goBackHome');
+  }
+
+  const reGame = () => {
+    if(!window.confirm('문제를 바꿀까요?')) return;
+    create();
+    calcMyExpression();
+  }
 </script>
 
 <template>
@@ -310,9 +346,11 @@
             [itm.char] : itm.type === 'opr'
           }"
           @click="restoreCard(itm, idx)">
-          {{ itm.type === 'num' ? itm.char : '' }}
-          <span v-if="itm.type === 'opr'"></span>
-          <span v-if="itm.type === 'opr'"></span>
+            <span v-if="itm.type === 'opr'">
+              <span></span>
+              <span></span>
+            </span>
+            <span v-else>{{ itm.char }}</span>
           </li>
         </ul>
         <h2 id="myValue" class="my-value"></h2>
@@ -328,8 +366,10 @@
             <legend>연산자</legend>
             <ul id="oprList" class="opr-list">
               <li v-for="(opr, idx) in state.oprs" :key="idx" :class="opr.char" @click="pickOprCard(opr)">
-                <span></span>
-                <span></span>
+                <span>
+                  <span></span>
+                  <span></span>
+                </span>
               </li>
             </ul>
         </fieldset>
@@ -340,8 +380,14 @@
             </ul>
         </fieldset>
         <div class="btns">
-            <button @click="initBoard">초기화</button>
-            <button @click="calcMyExpression(true)">제출</button>
+            <div>
+              <button class="home" @click="goHome"></button>
+              <button class="re" @click="reGame"><span></span></button>
+            </div>
+            <div>
+              <button class="init" @click="initBoard">초기화</button>
+              <button @click="calcMyExpression(true)">제출</button>
+            </div>
         </div>
       </div>
     </footer>
@@ -350,13 +396,10 @@
 
 <style scoped lang="scss">
   .wrapper{
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    height: 100%;
     
     aside{
       position: fixed;
@@ -517,15 +560,20 @@
         border: 1px dashed #ccc;
       }
 
-      span{
+      & > span{
         pointer-events: none;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
       }
 
-
-      &.p span,
-      &.m span:first-of-type,
-      &.m2 span,
-      &.d span:first-of-type{
+      &.p > span span,
+      &.m > span span:first-of-type,
+      &.m2 > span span,
+      &.d > span span:first-of-type{
         width: 28px;
         height: 8px;
         background: #000;
@@ -534,37 +582,38 @@
         left: 50%;
         transform: translate(-50%, -50%);
       }
-      &.p span:last-of-type{
+      &.p > span span:last-of-type{
         transform: translate(-50%, -50%) rotate(90deg);
       }
-      &.m2 span:first-of-type{
+      &.m2 > span span:first-of-type{
         transform: translate(-50%, -50%) rotate(45deg);
       }
-      &.m2 span:last-of-type{
+      &.m2 > span span:last-of-type{
         transform: translate(-50%, -50%) rotate(-45deg);
       }
-      &.d span:last-of-type{
+      &.d > span span:last-of-type{
         position: relative;
         width: 28px;
-        height: 36px;
+        height: 34px;
       }
-      &.d span:last-of-type:before,
-      &.d span:last-of-type:after{
+      &.d > span span:last-of-type:before,
+      &.d > span span:last-of-type:after{
         content: '';
         display: block;
         width: 10px;
         height: 10px;
         background: #000;
         position: absolute;
-        top: 2px;
+        top: 0;
         left: 50%;
         border-radius: 50%;
         transform: translateX(-50%);
       }
-      &.d span:last-of-type:after{
+      &.d > span span:last-of-type:after{
         top: unset;
-        bottom: 2px;
+        bottom: 0;
       }
+
     }
 
     &.picked-cards{
@@ -582,12 +631,12 @@
           color: rgba(255, 255, 255, 1);
           opacity: .5;
 
-          &.p span,
-          &.m span,
-          &.m2 span,
-          &.d span:first-of-type,
-          &.d span:after,
-          &.d span:before{background: #fff;}
+          &.p > span span,
+          &.m > span span,
+          &.m2 > span span,
+          &.d > span span:first-of-type,
+          &.d > span span:after,
+          &.d > span span:before{background: #fff;}
         }
       }
     }
@@ -608,8 +657,12 @@
   .btns{
     margin-top: 10px;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: space-between;
+
+    & > div{
+      display: flex;
+    }
 
     button{
       display: flex;
@@ -617,9 +670,98 @@
       justify-content: center;
       background: deeppink;
       color: #fff;
+      margin-right: 5px;
+      padding: 8px 16px;
+      outline: 0;
+
+      &:hover{
+        border-color: transparent;
+      }
+
+      &:last-of-type{
+        margin-right: 0;
+      }
+
+      &.home{
+        position: relative;
+        padding: 0;
+        width: 36px;
+
+        &:before,
+        &:after{
+          content: '';
+          position: absolute;
+          left: 50%;
+          box-sizing: border-box;
+          transform: translateX(-50%);
+        }
+
+        &:before{
+          width: 20px;
+          height: 20px;
+          border-top: 10px solid transparent;
+          border-left: 10px solid transparent;
+          border-right: 10px solid transparent;
+          border-bottom: 10px solid deeppink;
+          top: -2px;
+          // border-radius: 5px;
+        }
+        &:after{
+          top: 16px;
+          width: 14px;
+          height: 10px;
+          border-radius: 2px;
+          border: 4px solid deeppink;
+          border-bottom: 0;
+        }
+        
+      }
+
+      &.re{
+        position: relative;
+        padding: 0;
+        width: 36px;
+
+        span{
+          width: 16px;
+          height: 16px;
+          border: 2px solid #fff;
+          border-radius: 50%;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transform: rotate(-15deg);
+          animation: re 10s linear infinite;
+          pointer-events: none;
+        }
+        span:before,
+        span:after{
+          content: '';
+          width: 10px;
+          height: 10px;
+          border: 5px solid transparent;
+          position: absolute;
+          top: 50%;
+          box-sizing: border-box;
+        }
+        span:before{
+          border-top: 5px solid #fff;
+          left: -5px;
+          transform: translateY(-50%) rotate(6deg);
+        }
+        span:after{
+          border-bottom: 5px solid #fff;
+          right: -5px;
+          transform: translateY(-50%) rotate(6deg);
+        }
+      }
+
+      &.init{
+        background: palevioletred;
+      }
     }
     button:first-of-type{
-      margin-right: 5px;
       background: #fff;
       color: deeppink;
       border: 1px solid deeppink;
@@ -648,7 +790,12 @@
         width: 42px;
         height: 42px;
 
-
+        &.p > span,
+        &.m > span,
+        &.m2 > span,
+        &.d > span{
+          transform: scale(.8);
+        }
         
       }
 
@@ -658,20 +805,11 @@
           height: 30px;
           font-size: 16px;
 
-          &.p span,
-          &.m span:first-of-type,
-          &.m2 span,
-          &.d span:first-of-type{
-            width: 20px;
-            height: 2px;
-          }
-          &.d span:last-of-type{
-            height: 22px;
-          }
-          &.d span:last-of-type:before,
-          &.d span:last-of-type:after{
-            width: 4px;
-            height: 4px;
+          &.p > span,
+          &.m > span,
+          &.m2 > span,
+          &.d > span{
+            transform: scale(.5);
           }
 
         }
@@ -679,15 +817,21 @@
     }
   }
 
-  @media (max-height: 360px){
-    .wrapper{
-      flex-direction: row;
-    }
+  // @media (max-height: 360px){
+  //   .wrapper{
+  //     flex-direction: row;
+  //   }
 
-    footer{
-      position: relative;
-      width: 287px;
-      overflow-y: auto;
-    }
+  //   footer{
+  //     position: relative;
+  //     width: 287px;
+  //     overflow-y: auto;
+  //   }
+  // }
+
+  @keyframes re {
+    0%{tramsform: rotate(0);}
+    100%{transform: rotate(-360deg);}
+    
   }
 </style>

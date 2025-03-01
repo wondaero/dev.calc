@@ -9,6 +9,10 @@
     gameConfig: {}
   });
 
+  const goBackhome = (data) => {
+    state.pageNm = 'intro';
+  }
+
 
   const gameStart = (data) => {
     if(!data) return;
@@ -34,8 +38,6 @@
         dataObj[keyValue[0]] = keyValue[1]; 
       })
 
-
-
       state.gameConfig = dataObj;
       state.pageNm = 'game';
     }
@@ -44,7 +46,7 @@
 
 <template>
   <IntroPage @gameStart="gameStart" v-if="state.pageNm === 'intro'" />
-  <GamePage v-else-if="state.pageNm === 'game'" :gameConfig="state.gameConfig" />
+  <GamePage v-else-if="state.pageNm === 'game'" :gameConfig="state.gameConfig" @goBackHome="goBackhome" />
 </template>
 
 <style scoped>
