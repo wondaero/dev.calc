@@ -179,6 +179,7 @@
         }
 
         select{
+          color: #000;
           background: #fff;
           cursor: pointer;
           width: 100%;
@@ -201,6 +202,7 @@
 
     button{
       background: #fff;
+      color: #000;
 
       &:first-of-type{
         margin-right: 10px;
