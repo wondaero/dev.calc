@@ -41,8 +41,6 @@
 
   console.log(props.gameConfig);
 
-
-  
   const calcMyExpression = (isSubmit) => {
     if(!state.isAutoCalc && !isSubmit) return;
 
@@ -159,7 +157,7 @@
       strExpr += ng + rdmOpr;
     })
 
-    console.log(strExpr.slice(0, -1));  //정답
+    // console.log(strExpr.slice(0, -1));  //정답
 
     state.answer = new Function('return ' + strExpr.slice(0, -1))();
 
@@ -173,17 +171,14 @@
 
   //create
   const create = () => {
-    if(props.gameConfig && props.gameConfig.nums !== undefined && props.gameConfig.answer !== undefined){
-      console.log('url타고 들어옴')
-      state.nums = String(props.gameConfig.nums).split('').map((n, idx) => ({idx: idx, num: n}));
-      console.log(state);
+    state.pickedCards = [];
+    state.myAnswer = '';
+    if(props.gameConfig && props.gameConfig.nums !== undefined && props.gameConfig.answer !== undefined && props.gameConfig.oprs !== undefined){
+      state.nums = String(props.gameConfig.nums).split('').map((n, idx) => ({char: n, idx: idx, type: 'num'}));
       state.answer = props.gameConfig.answer;
+      state.oprs = String(props.gameConfig.oprs).split('').map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
     }else{
-      console.log('앞에서 옴')
-      state.pickedCards = [];
       state.nums = [];
-      state.myAnswer = '';
-
 
       let numCnt = props.gameConfig.numLen;
       if(numCnt === '0'){
@@ -203,9 +198,11 @@
       }
 
       state.oprs = props.gameConfig.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
+
       setGroup();
       randomOprCalc();
     }
+
   }
 
   create();
@@ -227,7 +224,7 @@
         id: id + new Date().getTime()
       };
       if(state.tmpCard.card.type === 'num'){
-        state.nums[state.tmpCard.idx] = state.tmpCard.card;
+        state.nums[state.tmpCard.card.idx] = state.tmpCard.card;
       }
 
       state.tmpCard = undefined;
@@ -327,6 +324,11 @@
 <template>
   <div class="wrapper" @click="cancelSelect($event)">
     <aside class="recal-cnt">{{ state.reCalcCnt }}</aside>
+    <!-- <aside class="share-btn">
+      <button id="kakaotalk-sharing-btn" class="share-btn">
+        <img src="https://developers.kakao.com/assets/img/about/logos/kakaotalksharing/kakaotalk_sharing_btn_small.png" alt="카카오톡 공유 보내기 버튼" />
+      </button>
+    </aside> -->
     <main>
       <div>
         <h2>{{ state.answer }}</h2>
@@ -408,6 +410,24 @@
       color: rgba(0, 0, 0, .2);
       font-size: 30px;
       vertical-align: top;
+
+      &.share-btn{
+        left: unset;
+        top: 10px;
+        right: 10px;
+
+        button{
+          padding: 0;
+          background: 0;
+          vertical-align: top;
+          border: 0;
+          
+          img{
+            vertical-align: top;
+          }
+        }
+      }
+
     }
     main{
       flex: 1;

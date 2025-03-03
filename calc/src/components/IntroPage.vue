@@ -179,6 +179,7 @@
         }
 
         select{
+          background: #fff;
           cursor: pointer;
           width: 100%;
           height: 40px;
@@ -197,8 +198,13 @@
     align-items: center;
     justify-content: center;
     margin-top: 30px;
-  }
-  .btns button:first-of-type{
-    margin-right: 10px;
+
+    button{
+      background: #fff;
+
+      &:first-of-type{
+        margin-right: 10px;
+      }
+    }
   }
 </style>

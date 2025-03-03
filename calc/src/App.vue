@@ -29,7 +29,7 @@
 
   onMounted(() => {
     const url = window.location;
-    if(url.search.indexOf('nums') > -1 && url.search.indexOf('answer') > -1){
+    if(url.search.indexOf('nums') > -1 && url.search.indexOf('answer') > -1 && url.search.indexOf('oprs') > -1){
       const dataObj = {};
       const keyValueArr = url.search.slice(1).split('&');
       keyValueArr.forEach(el => {
