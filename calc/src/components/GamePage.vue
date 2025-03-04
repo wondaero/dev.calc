@@ -1,5 +1,5 @@
 <script setup>
-  import { reactive, watch, defineEmits } from 'vue';
+  import { reactive, watch, defineEmits, onMounted } from 'vue';
   
   const props = defineProps({
     gameConfig: {
@@ -20,8 +20,51 @@
     reCalcCnt: 0,
     classList: {
       answer: 'wrong'
+    },
+    queryString: {
+      nums: '',
+      oprs: '',
+      answer: ''
     }
   });
+
+  onMounted(() => {
+    create();
+    state.queryString = {
+      nums: state.nums.map(n => n.char).join(''),
+      oprs: state.oprs.map(o => opr2symbol[o.char]).join(''),
+      answer: state.answer
+    }
+
+    if (!Kakao.isInitialized()) {
+      Kakao.init('e14b339e334e3a9bb5d3a6b66a9859fa'); // 사용하려는 앱의 JavaScript 키 입력
+    }
+
+      
+    Kakao.Share.createDefaultButton({
+      container: '#kakaotalk-sharing-btn',
+      objectType: 'feed',
+      content: {
+        title: '연산군',
+        description: `이것좀 풀어줘`,
+        link: {
+          // [내 애플리케이션] > [플랫폼] 에서 등록한 사이트 도메인과 일치해야 함
+          mobileWebUrl: 'https://developers.kakao.com',
+          webUrl: 'https://developers.kakao.com',
+        },
+      },
+      
+      buttons: [
+        {
+          title: '도전하기',
+          link: {
+            mobileWebUrl: `${window.location.href}?nums=${state.queryString.nums}&oprs=${state.queryString.oprs}&answer=${state.queryString.answer}`,
+            webUrl: `${window.location.href}?nums=${state.queryString.nums}&oprs=${state.queryString.oprs}&answer=${state.queryString.answer}`,
+          },
+        },
+      ],
+    });
+  })
 
   const emit = defineEmits(['goBackHome']);
 
@@ -36,7 +79,11 @@
     '+': 'p',
     '-': 'm',
     '*': 'm2',
-    '/': 'd'
+    '/': 'd',
+    p: '+',
+    m: '-',
+    m2: '*',
+    d: '/'
   }
 
   console.log(props.gameConfig);
@@ -195,6 +242,7 @@
           idx: i,
           type: 'num'
         });
+
       }
 
       state.oprs = props.gameConfig.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
@@ -205,7 +253,7 @@
 
   }
 
-  create();
+  
 
   const pickOprCard = (obj) => {
     if(!obj) return;
@@ -324,11 +372,11 @@
 <template>
   <div class="wrapper" @click="cancelSelect($event)">
     <aside class="recal-cnt">{{ state.reCalcCnt }}</aside>
-    <!-- <aside class="share-btn">
+    <aside class="share-btn">
       <button id="kakaotalk-sharing-btn" class="share-btn">
         <img src="https://developers.kakao.com/assets/img/about/logos/kakaotalksharing/kakaotalk_sharing_btn_small.png" alt="카카오톡 공유 보내기 버튼" />
       </button>
-    </aside> -->
+    </aside>
     <main>
       <div>
         <h2>{{ state.answer }}</h2>
