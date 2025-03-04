@@ -130,7 +130,7 @@
 
       if(!isSubmit) return;
 
-      if(state.myAnswer === state.answer){
+      if(+state.myAnswer === +state.answer){
         if(window.confirm('정답입니다. \n다른문제를 낼까요?')){
           create();
         }
