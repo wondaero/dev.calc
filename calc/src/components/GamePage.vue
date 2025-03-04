@@ -898,7 +898,7 @@
   // }
 
   @keyframes re {
-    0%{tramsform: rotate(0);}
+    0%{transform: rotate(0);}
     100%{transform: rotate(-360deg);}
     
   }
