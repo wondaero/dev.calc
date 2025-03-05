@@ -222,7 +222,7 @@
     state.myAnswer = '';
     if(props.gameConfig && props.gameConfig.nums !== undefined && props.gameConfig.answer !== undefined && props.gameConfig.oprs !== undefined){
       state.nums = String(props.gameConfig.nums).split('').map((n, idx) => ({char: n, idx: idx, type: 'num'}));
-      state.answer = props.gameConfig.answer;
+      state.answer = +props.gameConfig.answer;
       state.oprs = String(props.gameConfig.oprs).split('').map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
     }else{
       state.nums = [];
@@ -410,7 +410,7 @@
       <div>
         <fieldset class="my-answer">
             <legend><label><input type="checkbox" v-model="state.isAutoCalc" /><strong><span>자동계산</span><b></b></strong></label></legend>
-            <h2 :class="!state.nums.filter(n => n !== null).length && state.myAnswer === state.answer ? 'correct' : 'wrong'">{{ state.myAnswer }}</h2>
+            <h2 :class="!state.nums.filter(n => n !== null).length && +state.myAnswer === +state.answer ? 'correct' : 'wrong'">{{ state.myAnswer }}</h2>
         </fieldset>
         <fieldset>
             <legend>연산자</legend>
