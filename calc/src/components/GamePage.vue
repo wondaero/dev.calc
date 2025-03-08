@@ -39,31 +39,6 @@
     if (!Kakao.isInitialized()) {
       Kakao.init('e14b339e334e3a9bb5d3a6b66a9859fa'); // 사용하려는 앱의 JavaScript 키 입력
     }
-
-      
-    Kakao.Share.createDefaultButton({
-      container: '#kakaotalk-sharing-btn',
-      objectType: 'feed',
-      content: {
-        title: '연산군',
-        description: `#${state.answer}\n#이것좀 풀어줘`,
-        link: {
-          // [내 애플리케이션] > [플랫폼] 에서 등록한 사이트 도메인과 일치해야 함
-          mobileWebUrl: 'https://developers.kakao.com',
-          webUrl: 'https://developers.kakao.com',
-        },
-      },
-      
-      buttons: [
-        {
-          title: '도전하기',
-          link: {
-            mobileWebUrl: `${window.location.origin}?nums=${state.queryString.nums}&oprs=${state.queryString.oprs}&answer=${state.queryString.answer}`,
-            webUrl: `${window.location.origin}?nums=${state.queryString.nums}&oprs=${state.queryString.oprs}&answer=${state.queryString.answer}`,
-          },
-        },
-      ],
-    });
   })
 
   const emit = defineEmits(['goBackHome']);
@@ -133,6 +108,12 @@
       if(+state.myAnswer === +state.answer){
         if(window.confirm('정답입니다. \n다른문제를 낼까요?')){
           create(true);
+          state.queryString = {
+            nums: state.nums.map(n => n.char).join(''),
+            oprs: state.oprs.map(o => opr2symbol[o.char]).join(''),
+            answer: state.answer
+          }
+          console.log(state.queryString);
         }
         
       }else{
@@ -366,7 +347,38 @@
   const reGame = () => {
     if(!window.confirm('문제를 바꿀까요?')) return;
     create(true);
+    state.queryString = {
+      nums: state.nums.map(n => n.char).join(''),
+      oprs: state.oprs.map(o => opr2symbol[o.char]).join(''),
+      answer: state.answer
+    }
     calcMyExpression();
+  }
+
+  const shareKaKao = () => {
+    const qs = state.queryString; //코드 줄임
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: '연산군',
+        description: `#${state.answer}\n#이것좀 풀어줘`,
+        link: {
+          // [내 애플리케이션] > [플랫폼] 에서 등록한 사이트 도메인과 일치해야 함
+          mobileWebUrl: 'https://developers.kakao.com',
+          webUrl: 'https://developers.kakao.com',
+        },
+      },
+      
+      buttons: [
+        {
+          title: '도전하기',
+          link: {
+            mobileWebUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}`,
+            webUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}`,
+          },
+        },
+      ],
+    });
   }
 </script>
 
@@ -374,7 +386,7 @@
   <div class="wrapper" @click="cancelSelect($event)">
     <aside class="recal-cnt">{{ state.reCalcCnt }}</aside>
     <aside class="share-btn">
-      <button id="kakaotalk-sharing-btn" class="share-btn">
+      <button class="share-btn" @click="shareKaKao">
         <img src="https://developers.kakao.com/assets/img/about/logos/kakaotalksharing/kakaotalk_sharing_btn_small.png" alt="카카오톡 공유 보내기 버튼" />
       </button>
     </aside>
