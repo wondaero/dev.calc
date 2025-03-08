@@ -363,7 +363,7 @@
 
   const reGame = () => {
     if(!window.confirm('문제를 바꿀까요?')) return;
-    create();
+    create(true);
     calcMyExpression();
   }
 </script>
