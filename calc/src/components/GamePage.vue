@@ -46,7 +46,7 @@
       objectType: 'feed',
       content: {
         title: '연산군',
-        description: `이것좀 풀어줘`,
+        description: `#${state.answer}\n#이것좀 풀어줘`,
         link: {
           // [내 애플리케이션] > [플랫폼] 에서 등록한 사이트 도메인과 일치해야 함
           mobileWebUrl: 'https://developers.kakao.com',
@@ -132,7 +132,7 @@
 
       if(+state.myAnswer === +state.answer){
         if(window.confirm('정답입니다. \n다른문제를 낼까요?')){
-          create();
+          create(true);
         }
         
       }else{
@@ -186,7 +186,6 @@
     state.numGroup = [];
 
     while(tmpArr.length){
-      // const cutLen = getRandomNum(1, props.gameConfig.randomDigitLen ? 10 : props.gameConfig.digitLen);
       let cutLen = getRandomNum(1, props.gameConfig.digitLen);
       if(props.gameConfig.digitLen === '0') cutLen = getRandomNum(1, state.nums.length - 2);
 
@@ -198,9 +197,8 @@
   const randomOprCalc = () => {
     let strExpr = '';
 
-
     state.numGroup.forEach((ng) => {
-      const rdmOpr = oprs[getRandomNum(0, oprs.length - 1)];
+      const rdmOpr = rdmArr(state.oprs).opr;
       strExpr += ng + rdmOpr;
     })
 
@@ -217,22 +215,23 @@
   }
 
   //create
-  const create = () => {
+  const create = (isReGame) => {
     state.pickedCards = [];
     state.myAnswer = '';
-    if(props.gameConfig && props.gameConfig.nums !== undefined && props.gameConfig.answer !== undefined && props.gameConfig.oprs !== undefined){
-      state.nums = String(props.gameConfig.nums).split('').map((n, idx) => ({char: n, idx: idx, type: 'num'}));
-      state.answer = +props.gameConfig.answer;
-      state.oprs = String(props.gameConfig.oprs).split('').map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
+    const qs = props.gameConfig;  //코드 줄이기
+    if(!isReGame && qs && qs.nums !== undefined && qs.answer !== undefined && qs.oprs !== undefined){
+      state.nums = String(qs.nums).split('').map((n, idx) => ({char: n, idx: idx, type: 'num'}));
+      state.answer = +qs.answer;
+      state.oprs = String(qs.oprs).split('').map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
     }else{
       state.nums = [];
 
-      let numCnt = props.gameConfig.numLen;
+      let numCnt = qs.numLen;
       if(numCnt === '0'){
-        if(props.gameConfig.digitLen === '0'){
+        if(qs.digitLen === '0'){
           numCnt = getRandomNum(3, 10);
         }else{
-          numCnt = getRandomNum(props.gameConfig.digitLen + 2, 10);
+          numCnt = getRandomNum(qs.digitLen + 2, 10);
         }
       }
 
@@ -245,7 +244,7 @@
 
       }
 
-      state.oprs = props.gameConfig.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
+      state.oprs = qs.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
 
       setGroup();
       randomOprCalc();
@@ -838,7 +837,7 @@
   
   footer{
     background: #fff;
-    padding: 5px;
+    padding: 10px 5px;
     box-shadow: 0 0px 12px rgba(255, 255, 255, .9);
     color: #222;
     display: flex;
