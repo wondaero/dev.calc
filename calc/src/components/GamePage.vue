@@ -58,8 +58,8 @@
         {
           title: '도전하기',
           link: {
-            mobileWebUrl: `${window.location.href}?nums=${state.queryString.nums}&oprs=${state.queryString.oprs}&answer=${state.queryString.answer}`,
-            webUrl: `${window.location.href}?nums=${state.queryString.nums}&oprs=${state.queryString.oprs}&answer=${state.queryString.answer}`,
+            mobileWebUrl: `${window.location.origin}?nums=${state.queryString.nums}&oprs=${state.queryString.oprs}&answer=${state.queryString.answer}`,
+            webUrl: `${window.location.origin}?nums=${state.queryString.nums}&oprs=${state.queryString.oprs}&answer=${state.queryString.answer}`,
           },
         },
       ],
@@ -138,8 +138,6 @@
       }else{
         alert('땡! 틀렸습니다.');
       }
-        
-
 
     }catch(err){
       if(!isSubmit) return;
@@ -178,7 +176,6 @@
     }
     return arr;
   }
-
 
   const setGroup = () => {
     let tmpArr = shuffleArr(JSON.parse(JSON.stringify(state.nums))).map(a => +a.char);
@@ -224,6 +221,12 @@
       state.answer = +qs.answer;
       state.oprs = String(qs.oprs).split('').map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
     }else{
+      if(isReGame){
+        qs.numLen = qs.nums ? qs.nums.length : state.queryString.nums.length;
+        qs.oprs = typeof qs.oprs === 'string' ? qs.oprs.split('') : qs.oprs;
+        qs.digitLen = qs.numLen - 2;
+      }
+
       state.nums = [];
 
       let numCnt = qs.numLen;
@@ -244,12 +247,11 @@
 
       }
 
-      state.oprs = qs.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
+      state.oprs = (typeof qs.oprs === 'string' ? qs.oprs.split('') : qs.oprs).map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
 
       setGroup();
       randomOprCalc();
     }
-
   }
 
   

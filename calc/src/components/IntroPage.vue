@@ -29,6 +29,9 @@
 
   onMounted(() => {
     const savedConf = localStorage.getItem('calc');
+    // const loc = window.location;
+
+    // if(loc.search) loc.href = loc.href = loc.origin;
 
     if(savedConf){
       const parsedData = JSON.parse(savedConf);
@@ -48,6 +51,11 @@
   const gameStart = () => {
     localStorage.setItem('calc', JSON.stringify(state));
     emit('gameStart', state);
+
+    const url = new URL(window.location);
+    url.search = ''; // 쿼리 스트링 제거
+    window.history.replaceState({}, '', url);
+
   }
 
 </script>
