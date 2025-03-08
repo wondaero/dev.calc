@@ -83,7 +83,7 @@
     p: '+',
     m: '-',
     m2: '*',
-    d: '/'
+    d: '/',
   }
 
   console.log(props.gameConfig);
