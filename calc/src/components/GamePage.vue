@@ -24,13 +24,15 @@
     queryString: {
       nums: '',
       oprs: '',
-      answer: ''
+      answer: '',
+      code: ''
     }
   });
 
   onMounted(() => {
     create();
     state.queryString = {
+      ...state.queryString,
       nums: state.nums.map(n => n.char).join(''),
       oprs: state.oprs.map(o => opr2symbol[o.char]).join(''),
       answer: state.answer
@@ -59,6 +61,12 @@
     m: '-',
     m2: '*',
     d: '/',
+    code: {
+      '+': 1,
+      '-': 2,
+      '*': 3,
+      '/': 4,
+    }
   }
 
   console.log(props.gameConfig);
@@ -109,11 +117,11 @@
         if(window.confirm('정답입니다. \n다른문제를 낼까요?')){
           create(true);
           state.queryString = {
+            ...state.queryString,
             nums: state.nums.map(n => n.char).join(''),
             oprs: state.oprs.map(o => opr2symbol[o.char]).join(''),
             answer: state.answer
           }
-          console.log(state.queryString);
         }
         
       }else{
@@ -180,9 +188,20 @@
       strExpr += ng + rdmOpr;
     })
 
-    // console.log(strExpr.slice(0, -1));  //정답
+    state.queryString.code = strExpr.slice(0, -1);  //정답
+    // console.log(state.queryString.code);
 
-    state.answer = new Function('return ' + strExpr.slice(0, -1))();
+    let code = '';
+    strExpr.slice(0, -1).split('').forEach((str) => {
+      if(isNaN(str)){ //연산자
+        code += opr2symbol.code[str];
+      }else{  //숫자
+        code += String.fromCharCode(64 + +str)[getRandomNum(0, 1) ? 'toUpperCase' : 'toLowerCase']();
+      }
+    })
+
+    state.answer = new Function('return ' + state.queryString.code)();
+    state.queryString.code = code;
 
     if(String(state.answer).indexOf('.') > -1){
       console.warn('재연산!!!');
@@ -348,6 +367,7 @@
     if(!window.confirm('문제를 바꿀까요?')) return;
     create(true);
     state.queryString = {
+      ...state.queryString,
       nums: state.nums.map(n => n.char).join(''),
       oprs: state.oprs.map(o => opr2symbol[o.char]).join(''),
       answer: state.answer
@@ -373,8 +393,8 @@
         {
           title: '도전하기',
           link: {
-            mobileWebUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}`,
-            webUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}`,
+            mobileWebUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.codd}`,
+            webUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.codd}`,
           },
         },
       ],
@@ -420,6 +440,7 @@
       </div>
     </main>
     <footer>
+      <b>{{ state.queryString.code }}</b>
       <div>
         <fieldset class="my-answer">
             <legend><label><input type="checkbox" v-model="state.isAutoCalc" /><strong><span>자동계산</span><b></b></strong></label></legend>
@@ -857,7 +878,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 
+    & > b{
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-size: 8px;
+      opacity: .2;
+      color: #000;
+    }
     & > div{
       height: 100%;
       width: 100%;
