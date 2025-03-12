@@ -393,8 +393,8 @@
         {
           title: '도전하기',
           link: {
-            mobileWebUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.codd}`,
-            webUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.codd}`,
+            mobileWebUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.code}`,
+            webUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.code}`,
           },
         },
       ],
