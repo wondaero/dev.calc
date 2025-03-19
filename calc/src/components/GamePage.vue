@@ -192,11 +192,12 @@
     // console.log(state.queryString.code);
 
     let code = '';
+    const salt = getRandomNum(0, 17);
     strExpr.slice(0, -1).split('').forEach((str) => {
       if(isNaN(str)){ //연산자
         code += opr2symbol.code[str];
       }else{  //숫자
-        code += String.fromCharCode(64 + +str)[getRandomNum(0, 1) ? 'toUpperCase' : 'toLowerCase']();
+        code += String.fromCharCode(salt + 64 + +str)[getRandomNum(0, 1) ? 'toUpperCase' : 'toLowerCase']();
       }
     })
 
@@ -377,6 +378,9 @@
 
   const shareKaKao = () => {
     const qs = state.queryString; //코드 줄임
+    const gameLink = `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.code}`;
+
+    console.log(gameLink);
     window.Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
@@ -393,8 +397,8 @@
         {
           title: '도전하기',
           link: {
-            mobileWebUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.code}`,
-            webUrl: `${window.location.origin + window.location.pathname}?nums=${qs.nums}&oprs=${qs.oprs}&answer=${qs.answer}&code=${qs.code}`,
+            mobileWebUrl: gameLink,
+            webUrl: gameLink,
           },
         },
       ],
