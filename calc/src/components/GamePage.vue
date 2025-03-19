@@ -217,17 +217,33 @@
     state.pickedCards = [];
     state.myAnswer = '';
     const qs = props.gameConfig;  //코드 줄이기
+    const orderedArr = [];
     if(!isReGame && qs && qs.nums !== undefined && qs.answer !== undefined && qs.oprs !== undefined){
+      console.log('잉')
       state.nums = String(qs.nums).split('').map((n, idx) => ({char: n, idx: idx, type: 'num'}));
       state.answer = +qs.answer;
-      state.oprs = String(qs.oprs).split('').map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
+
+      String(qs.oprs).split('').forEach((el) => {
+        orderedArr[opr2symbol.code[el]] = el;
+      })
+
+      qs.oprs = orderedArr.join('').split('');
+
+      state.oprs = qs.oprs.map((o, idx) => ({opr: o, char: opr2symbol[o], idx: idx, type: 'opr'}));
     }else{
+      console.log('메인2')
       if(isReGame){
         qs.numLen = qs.nums ? qs.nums.length : state.queryString.nums.length;
         qs.oprs = typeof qs.oprs === 'string' ? qs.oprs.split('') : qs.oprs;
+        
         qs.digitLen = qs.numLen - 2;
       }
 
+      qs.oprs.forEach((el) => {
+        orderedArr[opr2symbol.code[el]] = el;
+      })
+
+      qs.oprs = orderedArr.join('').split('');
       state.nums = [];
 
       let numCnt = qs.numLen;
